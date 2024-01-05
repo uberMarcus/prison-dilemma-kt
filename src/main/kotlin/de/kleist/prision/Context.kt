@@ -14,19 +14,23 @@ class Context {
     private val strategies : MutableMap<UUID, Strategy> = HashMap()
     private val currentScore: MutableMap<UUID, AtomicLong> = HashMap()
     private val decisions: MutableMap<UUID, MutableList<Decision>> = HashMap()
-    private val opponents : Map<UUID, UUID> = HashMap()
+    private val opponents : HashMap<UUID, UUID> = HashMap()
 
-    public fun registerStrategy(s: Strategy) : UUID{
+    public fun registerStrategy(creator: (uuid:UUID) -> Strategy) : Strategy{
 
         val uuid = UUID.randomUUID()
         currentScore[uuid] = AtomicLong(0)
         decisions[uuid] = ArrayList<Decision> ()
 
-        strategies[uuid] = s
+        strategies[uuid] = creator.invoke(uuid)
 
-        if(opponents.size)
-
-        return uuid
+        if(strategies.size > 1){
+            strategies.keys.forEach{
+                strategies.keys.filter { it2 -> it != it2 }
+                    .forEach { it2 -> opponents[it] = it2 }
+            }
+        }
+        return strategies[uuid]!!
     }
 
     fun processNextRound() {
@@ -60,23 +64,28 @@ class Context {
         }
     }
 
-    fun getMyLastDecisions(uuid: UUID, n: Int): List<Decision?> {
-        val size = decisions[uuid]!!.size
-        return decisions[uuid]!!.subList((size - min(size.toDouble(), n.toDouble())).toInt(), size)
+    fun getMyLastDecisions(s: Strategy, n: Int): List<Decision?> {
+        val size = decisions[s.uuid]!!.size
+        return decisions[s.uuid]!!.subList((size - min(size.toDouble(), n.toDouble())).toInt(), size)
     }
 
-    fun getOpponentsLastDecisions(uuid: Strategy, n: Int): List<Decision> {
-        val size = decisions[opponents[s]]!!.size
-        return decisions[opponents[s]]!!
+    fun getOpponentsLastDecisions(s: Strategy, n: Int): List<Decision> {
+        val size = decisions[opponents[s.uuid]]!!.size
+        return decisions[opponents[s.uuid]]!!
             .subList((size - min(size.toDouble(), n.toDouble())).toInt(), size)
     }
 
-    fun getMyCurrentScore(s: Strategy?): Long {
-        return currentScore[s]!!.get()
+    fun getOpponentsLastDecision(s: Strategy): Decision? {
+        return getOpponentsLastDecisions(s, 1).stream().findFirst()
+            .orElse(null)
+    }
+
+    fun getMyCurrentScore(s: Strategy): Long {
+        return currentScore[s.uuid]!!.get()
     }
 
     fun getOpponentsCurrentScore(s: Strategy): Long {
-        return currentScore[opponents[s]]!!.get()
+        return currentScore[opponents[s.uuid]]!!.get()
     }
 
     fun getCurrentRound(): Long {
@@ -87,7 +96,7 @@ class Context {
         private const val SCORE_BOTH_COOPERATE = 3
         private const val SCORE_BOTH_DEFECT = 1
 
-        private const val SCORE_SINGLE_DEFECT = 5
+        private const val SCORE_SINGLE_DEFECT = 6
 
         private const val SCORE_SINGLE_COOPERATE = 0
     }

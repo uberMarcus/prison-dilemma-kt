@@ -5,8 +5,9 @@ import de.kleist.prision.Strategy
 import de.kleist.prision.Strategy.Decision
 import java.util.*
 
-class AlwaysCooperate(uuid: UUID) : Strategy(uuid) {
+class TwoTits4Tat(uuid: UUID) : Strategy(uuid) {
     override fun nextDecision(context: Context): Decision {
-        return Decision.COOPERATE
+        return context.getOpponentsLastDecisions(this, 2)
+            .find { it == Decision.DEFECT } ?: Decision.COOPERATE
     }
 }

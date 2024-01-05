@@ -2,7 +2,7 @@ package de.kleist.prision
 
 import java.util.*
 
-interface Strategy {
+abstract class Strategy(val uuid: UUID) {
     enum class Decision(private val toStringValue: String) {
         COOPERATE("C"),
         DEFECT("D");
@@ -12,7 +12,7 @@ interface Strategy {
         }
     }
 
-    fun nextDecision(context: Context): Decision
+    abstract fun nextDecision(context: Context): Decision
 
     val name: String
         get() = javaClass.simpleName
